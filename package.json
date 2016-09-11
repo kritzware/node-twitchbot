@@ -1,0 +1,26 @@
+{
+  "name": "node-twitchbot",
+  "version": "1.0.0",
+  "description": "TwitchBot package for NodeJS",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kritzware/node-twitchbot.git"
+  },
+  "keywords": [
+    "twitchbot"
+  ],
+  "author": "kritzware <suspiciouspotato@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kritzware/node-twitchbot/issues"
+  },
+  "homepage": "https://github.com/kritzware/node-twitchbot#readme",
+  "dependencies": {
+    "irc": "^0.5.0",
+    "q": "^1.4.1"
+  }
+}
