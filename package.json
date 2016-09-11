@@ -1,6 +1,6 @@
 {
   "name": "node-twitchbot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "TwitchBot package for NodeJS",
   "main": "index.js",
   "scripts": {
