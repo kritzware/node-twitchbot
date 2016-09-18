@@ -2,6 +2,8 @@ var irc = require('irc')
 var Q = require('q')
 var _ = require('lodash')
 
+var parser = require('./src/parser')
+
 var _conf;
 var client;
 
@@ -21,36 +23,55 @@ module.exports = {
 		client.send('CAP REQ', 'twitch.tv/commands')
 	},
 
-	listen : function() {
+	raw : function(callback) {
 		var deferred = Q.defer()
 
 		client.addListener('raw', (msg) => {
 			if(msg.commandType === 'normal') {
-				// console.log(msg)
 				var s = msg.command.split(';')
 				if(_.includes(s[2], 'display-name=')) {
-					deferred.notify(msg, s)
+					deferred.resolve(callback(msg, s))
 				}
 			}
 		})
+
 		client.addListener('error', (err) => {
+			deferred.reject(err)
+		})
+
+		return deferred.promise;
+	},
+
+	/* Exact string match */
+	listenFor : function(word, callback) {
+		var deferred = Q.defer()
+
+		this.raw((msg) => {
+			parser.exactMatch(msg, word).then((chatter) => {
+				deferred.resolve(callback(chatter))
+			}).catch((err) => {
+				deferred.reject(err)
+			})
+		}).catch((err) => {
 			deferred.reject(err)
 		})
 		return deferred.promise;
 	},
 
-	listenFor : function(word) {
+	/* Includes string match */
+	listen : function(word, callback) {
+		var deferred = Q.defer()
 
-		return this.listen().progress((msg, split) => {
-			if(_.includes(msg.args[0].split(':')[1], word)) {
-				return {
-					user: msg.rawCommand.split(';')[2].split('=')[1],
-					msg: msg.args[0].split(':')[1],
-					sub: msg.rawCommand.split(';')[7].split('=')[1],
-					type: msg.rawCommand.split(';')[10].split('=')[1]
-				}
-			}
+		this.raw((msg) => {
+			parser.includesMatch(msg, word).then((chatter) => {
+				deferred.resolve(callback(chatter))
+			}).catch((err) => {
+				deferred.reject(err)
+			})
+		}).catch((err) => {
+			deferred.reject(err)
 		})
+		return deferred.promise;
 	},
 
 	msg : function(message) {

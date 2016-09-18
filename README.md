@@ -15,8 +15,16 @@ bot.run({
   channel: 'channel'
 })
 
-bot.listenFor('Hello').progress((chatter) => {
-  bot.msg('Hello ' + chatter.user)
+/* Message is string */
+Bot.listenFor('Kappa', (chatter) => {
+	console.log(chatter)
+}).catch((err) => {
+	console.log(err)
+})
+
+/* Message includes string */
+Bot.listen('PogChamp', (chatter) => {
+	console.log(chatter)
 })
 ```
 
@@ -24,8 +32,11 @@ bot.listenFor('Hello').progress((chatter) => {
 ```javascript
 {
   user: 'KRITZWARE',
-  msg: 'Hello chat! PogChamp',
-  sub: 0,
-  type: 'mod'
+  msg: 'Hello chat! Keepo',
+  channel: 'kritzware',
+  user_id: '44667418'
+  level: 'mod',
+  sub: '0',
+  turbo: '0'
 }
 ```
