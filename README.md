@@ -7,24 +7,31 @@ $ npm install node-twitchbot
 
 ### Example
 ```javascript
-var bot = require('node-twitchbot')
+const Bot = require('node-twitchbot')
 
-bot.run({
-  username: 'bot_username',
+Bot.run({
+username: 'bot_username',
   oauth: 'oauth:twitch_oauth_key',
   channel: 'channel'
 })
 
-/* Message is string */
-Bot.listenFor('Kappa', (chatter) => {
-	console.log(chatter)
-}).catch((err) => {
-	console.log(err)
+/* Exact message match */
+Bot.listenFor('Kappa', (err, chatter) => {
+  if(err) {
+    console.log(err)
+  } else {
+    console.log(chatter)
+  }
 })
 
-/* Message includes string */
-Bot.listen('PogChamp', (chatter) => {
-	console.log(chatter)
+/* String is included in message */
+Bot.listen('PogChamp', (err, chatter) => {
+  console.log(chatter)
+})
+
+/* Sub/resub event in chat */
+Bot.resub((err, chatter, sub) => {
+  console.log(sub)
 })
 ```
 
