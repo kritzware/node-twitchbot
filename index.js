@@ -48,12 +48,12 @@ module.exports = {
 
 		this.raw((msg) => {
 			parser.exactMatch(msg, word).then((chatter) => {
-				deferred.resolve(callback(chatter))
+				deferred.resolve(callback(null, chatter))
 			}).catch((err) => {
-				deferred.reject(err)
+				deferred.reject(callback(err))
 			})
 		}).catch((err) => {
-			deferred.reject(err)
+			deferred.reject(callback(err))
 		})
 		return deferred.promise;
 	},
@@ -64,14 +64,28 @@ module.exports = {
 
 		this.raw((msg) => {
 			parser.includesMatch(msg, word).then((chatter) => {
-				deferred.resolve(callback(chatter))
+				deferred.resolve(callback(null, chatter))
 			}).catch((err) => {
-				deferred.reject(err)
+				deferred.reject(callback(err))
 			})
 		}).catch((err) => {
-			deferred.reject(err)
+			deferred.reject(callback(err))
 		})
 		return deferred.promise;
+	},
+
+	resub : function(callback) {
+		var deferred = Q.defer()
+
+		this.raw((msg) => {
+			parser.resub(msg).then((chatter, sub) => {
+				deferred.resolve(callback(null, chatter, sub))
+			}).catch((err) => {
+				deferred.reject(callback(err))
+			})
+		}).catch((err) => {
+			deferred.reject(callback(err))
+		})
 	},
 
 	msg : function(message) {

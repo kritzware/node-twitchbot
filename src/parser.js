@@ -57,6 +57,22 @@ module.exports = {
 		}
 
 		return deferred.promise;
+	},
+
+	resub : function(msg) {
+		var deferred = Q.defer()
+		var _this = this;
+
+		if(_.includes(msg.command, 'msg-id=resub')) {
+			var split_raw = _.split(msg.command, ';')
+			split_raw.forEach(function(msg) {
+				if(_.includes(msg, 'msg-param-months')) {
+					deferred.resolve(_this.createChatter(msg), _.split(msg, '=')[1])
+				}
+			})
+		}
+
+		return deferred.promise;
 	}
 
 }

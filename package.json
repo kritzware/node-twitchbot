@@ -1,7 +1,7 @@
 {
   "name": "node-twitchbot",
-  "version": "1.1.0",
-  "description": "TwitchBot package for NodeJS",
+  "version": "1.1.1",
+  "description": "Easily create chat bots for Twitch.tv",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,7 +11,11 @@
     "url": "git+https://github.com/kritzware/node-twitchbot.git"
   },
   "keywords": [
-    "twitchbot"
+    "twitchbot",
+    "twitch",
+    "chatbot",
+    "bot",
+    "twitch chatbot"
   ],
   "author": "kritzware <suspiciouspotato@gmail.com>",
   "license": "ISC",
