@@ -1,5 +1,7 @@
 # node-twitchbot
 
+<b>Note: </b> This package is not to be used for Twitch botting (inflating live viewer counts) and should only be used for chatbots. Attempting to 'bot' a Twitch channel can lead to your account being permanently banned. ![](https://static-cdn.jtvnw.net/emoticons/v1/91/1.0)
+
 ### Installation
 ```bash
 $ npm install node-twitchbot
