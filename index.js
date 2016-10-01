@@ -10,12 +10,13 @@ var client;
 module.exports = {
 
 	run : function(conf) {
-		_conf = conf;
+		conf.hashedChannel = '#' + conf.channel
+		_conf = conf
 
 		client = new irc.Client('irc.chat.twitch.tv', conf.username, {
 			port: 6667,
 			password: conf.oauth,
-			channels: ['#' + conf.channel]
+			channels: [conf.hashedChannel]
 		})
 
 		client.send('CAP REQ', 'twitch.tv/membership')
@@ -89,7 +90,7 @@ module.exports = {
 	},
 
 	msg : function(message) {
-		client.say(_conf.channel, message)
+		client.say(_conf.hashedChannel, message)
 	}
 
 }
