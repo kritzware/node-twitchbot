@@ -35,6 +35,9 @@ Bot.listen('PogChamp', (err, chatter) => {
 Bot.resub((err, chatter, sub) => {
   console.log(sub)
 })
+
+/* Say messages in chat */
+Bot.msg(message)
 ```
 
 #### Chatter : user object
