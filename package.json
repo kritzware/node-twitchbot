@@ -25,6 +25,7 @@
   "homepage": "https://github.com/kritzware/node-twitchbot#readme",
   "dependencies": {
     "irc": "^0.5.0",
+    "lodash": "^4.16.2",
     "q": "^1.4.1"
   }
 }

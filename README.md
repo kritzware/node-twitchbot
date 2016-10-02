@@ -26,6 +26,11 @@ Bot.listenFor('Kappa', (err, chatter) => {
   }
 })
 
+/* Return all messages with '*' */
+Bot.listenFor('*', (err, chatter) {
+  // Returns all viewer messages in channel
+})
+
 /* String is included in message */
 Bot.listen('PogChamp', (err, chatter) => {
   console.log(chatter)

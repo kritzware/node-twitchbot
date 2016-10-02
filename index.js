@@ -1,11 +1,11 @@
-var irc = require('irc')
-var Q = require('q')
-var _ = require('lodash')
+const irc = require('irc')
+const Q = require('q')
+const _ = require('lodash')
 
-var parser = require('./src/parser')
+const parser = require('./src/parser')
 
-var _conf;
-var client;
+let _conf;
+let client;
 
 module.exports = {
 
@@ -25,7 +25,7 @@ module.exports = {
 	},
 
 	raw : function(callback) {
-		var deferred = Q.defer()
+		const deferred = Q.defer()
 
 		client.addListener('raw', (msg) => {
 			if(msg.commandType === 'normal') {
@@ -45,7 +45,7 @@ module.exports = {
 
 	/* Exact string match */
 	listenFor : function(word, callback) {
-		var deferred = Q.defer()
+		const deferred = Q.defer()
 
 		this.raw((msg) => {
 			parser.exactMatch(msg, word).then((chatter) => {
@@ -61,7 +61,7 @@ module.exports = {
 
 	/* Includes string match */
 	listen : function(word, callback) {
-		var deferred = Q.defer()
+		const deferred = Q.defer()
 
 		this.raw((msg) => {
 			parser.includesMatch(msg, word).then((chatter) => {
@@ -76,7 +76,7 @@ module.exports = {
 	},
 
 	resub : function(callback) {
-		var deferred = Q.defer()
+		const deferred = Q.defer()
 
 		this.raw((msg) => {
 			parser.resub(msg).then((chatter, sub) => {

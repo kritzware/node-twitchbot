@@ -36,14 +36,21 @@ module.exports = {
 	},
 
 	getChannel : function(msg) {
-		return msg.args[0].split('#')[1].split(' ')[0]
+		if(_.includes(msg.args[0], '#')) {
+			return msg.args[0].split('#')[1].split(' ')[0]
+		}
+		return 'IRC'
 	},
 
 	exactMatch : function(msg, word) {
 		var deferred = Q.defer()
 
-		if(msg.args[0].split(':')[1] === word) {
+		if(word === '*') {
 			deferred.resolve(this.createChatter(msg))
+		} else {
+			if(msg.args[0].split(':')[1] === word) {
+				deferred.resolve(this.createChatter(msg))
+			}
 		}
 
 		return deferred.promise;
