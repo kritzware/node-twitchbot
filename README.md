@@ -26,7 +26,7 @@ Bot.listenFor('Kappa', (err, chatter) => {
   }
 })
 
-/* Return all messages with '*' */
+/* Return all user message in channel */
 Bot.listenFor('*', (err, chatter) {
   // Returns all viewer messages in channel
 })
