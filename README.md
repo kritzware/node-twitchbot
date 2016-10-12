@@ -42,7 +42,33 @@ Bot.resub((err, chatter, sub) => {
 })
 
 /* Say messages in chat */
-Bot.msg(message)
+Bot.msg('Hello chat!')
+
+/* Private message user */
+Bot.whisper('kritzware', 'This is a private message Kappa')
+
+/* Setting commands instead of checking via string match */
+const commands = {
+  help : 'For help using this bot, contact kritzware',
+  twitter : 'Follow this channel at https://twitter.com/test123',
+  /* You can also use functions to generate a command response */
+  random : (chatter) => {
+    return Math.floor((Math.random() * -1) + 1)
+  },
+  /* Command functions can make use of the chatter object of the user who executed the command */
+  goodnight : (chatter) => {
+    return 'Goodnight ' + chatter.user + '! FeelsGoodMan'
+  }
+}
+
+Bot.commands('!', commands, (err, chatter, command) => {
+  if(err) {
+    console.log(err)
+  } else {
+    console.log(command)
+    console.log(chatter)
+  }
+})
 ```
 
 #### Chatter : user object
@@ -56,4 +82,10 @@ Bot.msg(message)
   sub: '0',
   turbo: '0'
 }
+```
+#### Example of a command
+```javascript
+Bot.listenFor('!command', (err, chatter) => {
+  Bot.msg('This is the command response')
+})
 ```

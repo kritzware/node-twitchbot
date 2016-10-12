@@ -6,6 +6,7 @@ const parser = require('./src/parser')
 
 let _conf;
 let client;
+let _commands;
 
 module.exports = {
 
@@ -48,7 +49,8 @@ module.exports = {
 		const deferred = Q.defer()
 
 		this.raw((msg) => {
-			parser.exactMatch(msg, word).then((chatter) => {
+			parser.exactMatch(msg, word)
+			.then((chatter) => {
 				deferred.resolve(callback(null, chatter))
 			}).catch((err) => {
 				deferred.reject(callback(err))
@@ -64,7 +66,8 @@ module.exports = {
 		const deferred = Q.defer()
 
 		this.raw((msg) => {
-			parser.includesMatch(msg, word).then((chatter) => {
+			parser.includesMatch(msg, word)
+			.then((chatter) => {
 				deferred.resolve(callback(null, chatter))
 			}).catch((err) => {
 				deferred.reject(callback(err))
@@ -79,7 +82,8 @@ module.exports = {
 		const deferred = Q.defer()
 
 		this.raw((msg) => {
-			parser.resub(msg).then((chatter, sub) => {
+			parser.resub(msg)
+			.then((chatter, sub) => {
 				deferred.resolve(callback(null, chatter, sub))
 			}).catch((err) => {
 				deferred.reject(callback(err))
@@ -87,10 +91,44 @@ module.exports = {
 		}).catch((err) => {
 			deferred.reject(callback(err))
 		})
+		return deferred.promise;
 	},
 
 	msg : function(message) {
-		client.say(_conf.hashedChannel, message)
-	}
+		client.send('PRIVMSG ' + _conf.hashedChannel, message)
+	},
 
+	whisper : function(user, message) {
+		client.send('PRIVMSG ' + _conf.hashedChannel, '/w ' + user + ' ' + message)
+	},
+
+	commands : function(prefix, commands, callback) {
+		_commands = commands
+		const _this = this
+		const deferred = Q.defer()
+
+		this.raw((msg) => {
+			_.keys(_commands).forEach((cmd) => {
+				parser.exactMatch(msg, prefix + cmd)
+				.then((chatter) => {
+					if(Object.prototype.toString.call(_commands[cmd]) == '[object Function]') {
+						try {
+							const out = _commands[cmd](chatter)
+							_this.msg(out.toString())
+							deferred.resolve(callback(null, chatter, cmd))
+						} catch(err) {
+							deferred.reject(callback(err))
+						}
+					} else {
+						_this.msg(_commands[cmd])
+						deferred.resolve(callback(null, chatter, cmd))
+					}
+				})
+			})
+		})
+		.catch((err) => {
+			deferred.reject(callback(err))
+		})
+		return deferred.promise;
+	}
 }

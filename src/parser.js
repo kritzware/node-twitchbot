@@ -1,10 +1,10 @@
-var Q = require('q')
-var _ = require('lodash')
+const Q = require('q')
+const _ = require('lodash')
 
 module.exports = {
 
 	createChatter : function(msg) {
-		var deferred = Q.defer()
+		const deferred = Q.defer()
 
 		deferred.resolve({
 			user: this.getElement(msg, 'display-name'),
@@ -12,16 +12,16 @@ module.exports = {
 			channel: this.getChannel(msg),
 			user_id: this.getElement(msg, 'user-id'),
 			level: this.getElement(msg, 'user-type'),
-			sub: this.getElement(msg, 'subscriber'),
-			turbo: this.getElement(msg, 'turbo'),
+			sub: +this.getElement(msg, 'subscriber'),
+			turbo: +this.getElement(msg, 'turbo'),
 		})
 
 		return deferred.promise;
 	},
 
 	getElement : function(msg, el) {
-		var temp;
-		var s = msg.rawCommand.split(';')
+		let temp;
+		const s = msg.rawCommand.split(';')
 
 		s.some((m) => {
 			if(_.includes(m, el)) {
@@ -43,7 +43,7 @@ module.exports = {
 	},
 
 	exactMatch : function(msg, word) {
-		var deferred = Q.defer()
+		const deferred = Q.defer()
 
 		if(word === '*') {
 			deferred.resolve(this.createChatter(msg))
@@ -57,7 +57,7 @@ module.exports = {
 	},
 
 	includesMatch : function(msg, word) {
-		var deferred = Q.defer()
+		const deferred = Q.defer()
 
 		if(_.includes(msg.args[0].split(':')[1], word)) {
 			deferred.resolve(this.createChatter(msg))
@@ -67,8 +67,8 @@ module.exports = {
 	},
 
 	resub : function(msg) {
-		var deferred = Q.defer()
-		var _this = this;
+		const deferred = Q.defer()
+		const _this = this;
 
 		if(_.includes(msg.command, 'msg-id=resub')) {
 			var split_raw = _.split(msg.command, ';')
