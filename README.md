@@ -71,6 +71,9 @@ Bot.commands('!', commands, (err, chatter, command) => {
 })
 ```
 
+#### Output for example '!goodnight' command above
+![](http://i.imgur.com/buPqiaK.gif)
+
 #### Chatter : user object
 ```javascript
 {
