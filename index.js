@@ -1,3 +1,5 @@
+"use strict";
+
 const irc = require('irc')
 const Q = require('q')
 const _ = require('lodash')
