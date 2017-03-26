@@ -7,6 +7,41 @@
 $ npm install node-twitchbot
 ```
 
+## V2 DOCS (Currently Unreleased)
+### Example
+```javascript
+const TwitchBot = require('node-twitchbot)
+
+const Bot = new TwitchBot({
+  username : 'GLADOS',
+  oauth    : 'oauth:secret-oauth-pass'
+  channel  : 'Aperture'
+})
+
+/* Listen for all messages in channel */
+Bot.listen((err, chatter) => {
+  if(err) {
+    console.log(err)
+  } else {
+    console.log(chatter)
+  }
+})
+
+/* Listen for an exact messages match */
+Bot.listenFor('KKona', (err, chatter) => {
+  console.log(chatter)
+})
+
+/* Send a message in the channel */
+Bot.msg('this is the message text PogChamp')
+
+/* Listen for raw IRC events */
+Bot.raw((err, event) => {
+  console.log(event)
+})
+```
+
+## V1 DOCS
 ### Example
 ```javascript
 const Bot = require('node-twitchbot')
