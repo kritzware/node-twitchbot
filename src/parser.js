@@ -1,24 +1,21 @@
 "use strict";
 
-const Q = require('q')
 const _ = require('lodash')
 
 module.exports = {
 
 	createChatter : function(msg) {
-		const deferred = Q.defer()
-
-		deferred.resolve({
-			user: this.getElement(msg, 'display-name'),
-			msg: this.getMessage(msg),
-			channel: this.getChannel(msg),
-			user_id: this.getElement(msg, 'user-id'),
-			level: this.getElement(msg, 'user-type'),
-			sub: +this.getElement(msg, 'subscriber'),
-			turbo: +this.getElement(msg, 'turbo'),
+		return new Promise(resolve => {
+			resolve({
+				user: this.getElement(msg, 'display-name'),
+				msg: this.getMessage(msg),
+				channel: this.getChannel(msg),
+				twitch_id: this.getElement(msg, 'user-id'),
+				level: this.getElement(msg, 'user-type'),
+				sub: +this.getElement(msg, 'subscriber'),
+				turbo: +this.getElement(msg, 'turbo'),
+			})
 		})
-
-		return deferred.promise;
 	},
 
 	getElement : function(msg, el) {
@@ -45,43 +42,37 @@ module.exports = {
 	},
 
 	exactMatch : function(msg, word) {
-		const deferred = Q.defer()
-
-		if(word === '*') {
-			deferred.resolve(this.createChatter(msg))
-		} else {
-			if(msg.args[0].split(':')[1] === word) {
-				deferred.resolve(this.createChatter(msg))
+		return new Promise(resolve => {
+			if(word === '*') {
+				resolve(this.createChatter(msg))
+			} else {
+				if(msg.args[0].split(':')[1] === word) {
+					resolve(this.createChatter(msg))
+				}
 			}
-		}
-
-		return deferred.promise;
+		})
 	},
 
 	includesMatch : function(msg, word) {
-		const deferred = Q.defer()
-
-		if(_.includes(msg.args[0].split(':')[1], word)) {
-			deferred.resolve(this.createChatter(msg))
-		}
-
-		return deferred.promise;
+		return new Promise(resolve => {
+			if(_.includes(msg.args[0].split(':')[1], word)) {
+				resolve(this.createChatter(msg))
+			}
+		})
 	},
 
 	resub : function(msg) {
-		const deferred = Q.defer()
 		const _this = this;
-
-		if(_.includes(msg.command, 'msg-id=resub')) {
-			var split_raw = _.split(msg.command, ';')
-			split_raw.forEach(function(msg) {
-				if(_.includes(msg, 'msg-param-months')) {
-					deferred.resolve(_this.createChatter(msg), _.split(msg, '=')[1])
-				}
-			})
-		}
-
-		return deferred.promise;
+		return new Promise(resolve => {
+			if(_.includes(msg.command, 'msg-id=resub')) {
+				var split_raw = _.split(msg.command, ';')
+				split_raw.forEach(function(msg) {
+					if(_.includes(msg, 'msg-param-months')) {
+						resolve(_this.createChatter(msg), _.split(msg, '=')[1])
+					}
+				})
+			}
+		})
 	}
 
 }

@@ -1,0 +1,7 @@
+language: node_js
+node_js:
+  - "6.9.0"
+  - "7.7.4"
+install:
+  - npm install
+  - npm run test

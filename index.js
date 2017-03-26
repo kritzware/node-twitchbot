@@ -1,136 +1,106 @@
-"use strict";
+"use strict"
 
-const irc = require('irc')
-const Q = require('q')
+const IRC = require('irc')
 const _ = require('lodash')
-
 const parser = require('./src/parser')
 
-let _conf;
-let client;
-let _commands;
-
-module.exports = {
-
-	run : function(conf) {
-		conf.hashedChannel = '#' + conf.channel
-		_conf = conf
-
-		client = new irc.Client('irc.chat.twitch.tv', conf.username, {
-			port: 6667,
-			password: conf.oauth,
-			channels: [conf.hashedChannel]
-		})
-
-		client.send('CAP REQ', 'twitch.tv/membership')
-		client.send('CAP REQ', 'twitch.tv/tags')
-		client.send('CAP REQ', 'twitch.tv/commands')
-	},
-
-	raw : function(callback) {
-		const deferred = Q.defer()
-
-		client.addListener('raw', (msg) => {
-			if(msg.commandType === 'normal') {
-				var s = msg.command.split(';')
-				if(_.includes(s[2], 'display-name=')) {
-					deferred.resolve(callback(msg, s))
-				}
-			}
-		})
-
-		client.addListener('error', (err) => {
-			deferred.reject(err)
-		})
-
-		return deferred.promise;
-	},
-
-	/* Exact string match */
-	listenFor : function(word, callback) {
-		const deferred = Q.defer()
-
-		this.raw((msg) => {
-			parser.exactMatch(msg, word)
-			.then((chatter) => {
-				deferred.resolve(callback(null, chatter))
-			}).catch((err) => {
-				deferred.reject(callback(err))
-			})
-		}).catch((err) => {
-			deferred.reject(callback(err))
-		})
-		return deferred.promise;
-	},
-
-	/* Includes string match */
-	listen : function(word, callback) {
-		const deferred = Q.defer()
-
-		this.raw((msg) => {
-			parser.includesMatch(msg, word)
-			.then((chatter) => {
-				deferred.resolve(callback(null, chatter))
-			}).catch((err) => {
-				deferred.reject(callback(err))
-			})
-		}).catch((err) => {
-			deferred.reject(callback(err))
-		})
-		return deferred.promise;
-	},
-
-	resub : function(callback) {
-		const deferred = Q.defer()
-
-		this.raw((msg) => {
-			parser.resub(msg)
-			.then((chatter, sub) => {
-				deferred.resolve(callback(null, chatter, sub))
-			}).catch((err) => {
-				deferred.reject(callback(err))
-			})
-		}).catch((err) => {
-			deferred.reject(callback(err))
-		})
-		return deferred.promise;
-	},
-
-	msg : function(message) {
-		client.send('PRIVMSG ' + _conf.hashedChannel, message)
-	},
-
-	whisper : function(user, message) {
-		client.send('PRIVMSG ' + _conf.hashedChannel, '/w ' + user + ' ' + message)
-	},
-
-	commands : function(prefix, commands, callback) {
-		_commands = commands
-		const _this = this
-		const deferred = Q.defer()
-
-		this.raw((msg) => {
-			_.keys(_commands).forEach((cmd) => {
-				parser.exactMatch(msg, prefix + cmd)
-				.then((chatter) => {
-					if(Object.prototype.toString.call(_commands[cmd]) == '[object Function]') {
-						try {
-							const out = _commands[cmd](chatter)
-							_this.msg(out.toString())
-							deferred.resolve(callback(null, chatter, cmd))
-						} catch(err) {
-							deferred.reject(callback(err))
-						}
-					} else {
-						_this.msg(_commands[cmd])
-						deferred.resolve(callback(null, chatter, cmd))
-					}
-				})
-			})
-		})
-		.catch((err) => {
-			deferred.reject(callback(err))
-		})
-		return deferred.promise;
+function Bot({
+	username=null, 
+	oauth=null, 
+	channel=null
+}) {
+	if(!username || !oauth || !channel) {
+		throw new Error('Bot() requires options argument')
 	}
+	this.username = username
+	this.oauth = oauth
+	this.channel = channel.toLowerCase()
+	this.client = null
 }
+
+Bot.prototype = {
+
+	connect() {
+		return new Promise((resolve, reject) => {
+			this.client = new IRC.Client('irc.chat.twitch.tv', this.username, {
+				userName: this.username + '-node-twitchbot' + Math.random(),
+				realName: this.username + '-node-twitchbot' + Math.random(),
+				port: 443,
+				password: this.oauth,
+				channels: ['#' + this.channel],
+				debug: false,
+				secure: true,
+				autoConnect: false
+			})
+			this.client.connect(connected => {
+				if(!connected) reject()
+				if(connected.rawCommand === '001') {
+					this.client.send('CAP REQ', 'twitch.tv/membership')
+					this.client.send('CAP REQ', 'twitch.tv/tags')
+					this.client.send('CAP REQ', 'twitch.tv/commands')
+					resolve()
+				}
+			})
+			this.client.addListener('error', err => {
+				// console.log('CONNECTION ERROR')
+				// console.log(err)
+			})
+		})
+	},
+
+	listen(callback) {
+		return new Promise((resolve, reject) => {
+			this.raw((err, event) => {
+				if(err) {
+					resolve(callback(err))
+				} else {
+					if(event.commandType === 'normal') {
+						const split = event.command.split(';')
+						if(_.includes(split[2], 'display-name=') && !_.includes(event.args[0], 'USERSTATE')) {
+							parser.createChatter(event)
+							.then(chatter => resolve(callback(null, chatter)))
+							.catch(err => resolve(callback(err)))
+						}
+					}					
+				}
+			})
+		})
+	},
+
+	listenFor(word, callback) {
+		return new Promise((resolve, reject) => {
+			this.raw((err, event) => {
+				if(err) {
+					resolve(callback(err))
+				} else {
+					if(event.commandType === 'normal') {
+						const split = event.command.split(';')
+						if(_.includes(split[2], 'display-name=')) {
+							parser.exactMatch(event, word)
+							.then(chatter => resolve(callback(null, chatter)))
+							.catch(err => resolve(callback(err)))
+						}
+					}
+				}
+			})
+		})
+	},
+
+	raw(cb_event) {
+		return new Promise((resolve, reject) => {
+			this.client.addListener('raw', event => {
+				resolve(cb_event(null, event))
+			})
+			this.client.addListener('error', err => {
+				resolve(cb_event(err))
+			})
+		})
+	},
+
+	msg(text) {
+		this.client.send('PRIVMSG #' + this.channel, text)
+	}
+
+}
+
+module.exports = Bot
