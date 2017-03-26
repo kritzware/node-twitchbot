@@ -1,12 +1,11 @@
 const assert = require('assert')
 const expect = require('chai').expect
 
-const conf = require('../config')
 const Bot = require('../index')
 const test_options = {
-  username : conf.test_user,
-  oauth    : conf.test_oauth,
-  channel  : conf.test_channel
+  username : process.env.username,
+  oauth    : process.env.oauth,
+  channel  : process.env.channel
 }
 
 describe('Bot', () => {
