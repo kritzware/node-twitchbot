@@ -10,7 +10,7 @@ $ npm install node-twitchbot
 ## V2 DOCS (Currently Unreleased)
 ### Example
 ```javascript
-const TwitchBot = require('node-twitchbot)
+const TwitchBot = require('node-twitchbot')
 
 const Bot = new TwitchBot({
   username : 'GLADOS',
