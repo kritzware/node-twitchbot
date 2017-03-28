@@ -23,26 +23,32 @@ const Bot = new TwitchBot({
   channel  : 'Aperture'
 })
 
-/* Listen for all messages in channel */
-Bot.listen((err, chatter) => {
-  if(err) {
-    console.log(err)
-  } else {
+/* Connect bot to Twitch IRC */
+Bot.connect()
+.then(() => {
+
+  /* Listen for all messages in channel */
+  Bot.listen((err, chatter) => {
+    if(err) {
+      console.log(err)
+    } else {
+      console.log(chatter)
+    }
+  })
+
+  /* Listen for an exact messages match */
+  Bot.listenFor('KKona', (err, chatter) => {
     console.log(chatter)
-  }
-})
+  })
 
-/* Listen for an exact messages match */
-Bot.listenFor('KKona', (err, chatter) => {
-  console.log(chatter)
-})
+  /* Send a message in the channel */
+  Bot.msg('this is the message text PogChamp')
 
-/* Send a message in the channel */
-Bot.msg('this is the message text PogChamp')
+  /* Listen for raw IRC events */
+  Bot.raw((err, event) => {
+    console.log(event)
+  })
 
-/* Listen for raw IRC events */
-Bot.raw((err, event) => {
-  console.log(event)
 })
 ```
 
