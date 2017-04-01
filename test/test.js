@@ -8,6 +8,8 @@ const test_options = {
   channel  : process.env.channel
 }
 
+/* TODO: Make all tests better */
+
 describe('Bot', () => {
 
   describe('init', () => {

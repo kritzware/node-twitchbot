@@ -32,7 +32,7 @@ Bot.connect()
     if(err) {
       console.log(err)
     } else {
-      console.log(chatter)
+      console.log(chatter.msg) // 'Hello World!'
     }
   })
 
@@ -48,8 +48,25 @@ Bot.connect()
   Bot.raw((err, event) => {
     console.log(event)
   })
-
 })
+.catch(err => {
+  console.log('Connection error!')
+  console.log(err)
+})
+```
+
+### Chatter Object
+Most callbacks return a `chatter` object which contains the following attributes:
+```javascript
+{
+  user: 'kritzware',
+  msg: 'Hello world! Kappa',
+  channel: 'kritzware',
+  twitch_id: '44667418',
+  level: 'mod',
+  sub: 0,
+  turbo: 0
+}
 ```
 
 ## V1 DOCS
@@ -120,18 +137,6 @@ Bot.commands('!', commands, (err, chatter, command) => {
 #### Output for example '!goodnight' command above
 ![](http://i.imgur.com/buPqiaK.gif)
 
-#### Chatter : user object
-```javascript
-{
-  user: 'KRITZWARE',
-  msg: 'Hello chat! Keepo',
-  channel: 'kritzware',
-  user_id: '44667418'
-  level: 'mod',
-  sub: '0',
-  turbo: '0'
-}
-```
 #### Example of a command
 ```javascript
 Bot.listenFor('!command', (err, chatter) => {

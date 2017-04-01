@@ -23,8 +23,6 @@ Bot.prototype = {
 	connect() {
 		return new Promise((resolve, reject) => {
 			this.client = new IRC.Client('irc.chat.twitch.tv', this.username, {
-				userName: this.username + '-node-twitchbot',
-				realName: this.username + '-node-twitchbot',
 				port: 443,
 				password: this.oauth,
 				channels: ['#' + this.channel],
@@ -42,8 +40,11 @@ Bot.prototype = {
 				}
 			})
 			this.client.addListener('error', err => {
-				// console.log('CONNECTION ERROR')
-				// console.log(err)
+				if(err.rawCommand !== '421') {
+					console.log('CONNECTION ERROR')
+					console.log(err)
+					reject(err)
+				}
 			})
 		})
 	},
@@ -92,7 +93,9 @@ Bot.prototype = {
 				resolve(cb_event(null, event))
 			})
 			this.client.addListener('error', err => {
-				resolve(cb_event(err))
+				if(err.rawCommand !== '421') {
+					resolve(cb_event(err))
+				}
 			})
 		})
 	},
