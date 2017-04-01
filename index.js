@@ -40,11 +40,9 @@ Bot.prototype = {
 				}
 			})
 			this.client.addListener('error', err => {
-				if(err.rawCommand !== '421') {
-					console.log('CONNECTION ERROR')
-					console.log(err)
-					reject(err)
-				}
+				console.log('CONNECTION ERROR')
+				console.log(err)
+				reject(err)
 			})
 		})
 	},
@@ -93,9 +91,7 @@ Bot.prototype = {
 				resolve(cb_event(null, event))
 			})
 			this.client.addListener('error', err => {
-				if(err.rawCommand !== '421') {
-					resolve(cb_event(err))
-				}
+				resolve(cb_event(err))
 			})
 		})
 	},
