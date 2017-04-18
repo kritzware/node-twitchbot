@@ -19,7 +19,7 @@ const TwitchBot = require('node-twitchbot')
 
 const Bot = new TwitchBot({
   username : 'GLADOS',
-  oauth    : 'oauth:secret-oauth-pass'
+  oauth    : 'oauth:secret-oauth-pass',
   channel  : 'Aperture'
 })
 
