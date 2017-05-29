@@ -4,7 +4,7 @@
   "description": "Easily create chat bots for Twitch.tv",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/test.js --timeout 6000"
+    "test": "mocha test/test.js --timeout 10000"
   },
   "repository": {
     "type": "git",
@@ -24,7 +24,8 @@
   },
   "homepage": "https://github.com/kritzware/node-twitchbot#readme",
   "dependencies": {
-    "irc": "kritzware/node-irc",
+    "irc-message": "^3.0.2",
+    "limiter": "^1.1.0",
     "lodash": "^4.16.2"
   },
   "devDependencies": {
