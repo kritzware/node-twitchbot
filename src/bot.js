@@ -53,46 +53,69 @@ const Bot = class Bot {
         resolve()
       })
       this.irc.on("error", err => {
-        reject(err)  
+        // reject(err)
+        this.emit('error', err)  
       })
     })
   }
 
   listen(callback) {
+    const events_to_ignore = [
+      '001', '002', '003', '004', 
+      '372', '375', '376', // MOTD
+      'CAP', // CAP 
+      '353', '366' // NAMES LIST
+    ]
     this.raw((event, err) => {
       if(err) callback(null, err)
       else {
-        switch(event.command) {
-          case 'PRIVMSG':
-            this.emit('message', event.tags)
-            break
+        if(!events_to_ignore.includes(event.command)) {
+          switch(event.command) {
+            case 'PRIVMSG':
+              this.emit('message', event.tags)
+              break
 
-          case 'NOTICE':
-            if(event.params.includes('Login authentication failed')) {
-              this.emit('error', event.params[1] + ' for ' + this.username)
-            }
-            break
+            case 'NOTICE':
+              if(event.params.includes('Login authentication failed')) {
+                this.emit('error', event.params[1] + ' for ' + this.username)
+              }
+              break
 
-          case 'ROOMSTATE':
-            console.log(event.params)
-            break
+            case 'ROOMSTATE':
+              console.log(event.params)
+              break
 
-          case 'USERNOTICE': // resubs
-            console.log(event)
-            break
+            case 'USERNOTICE': // resubs
+              if(event.tags['msg-id'] === 'resub') {
+                this.emit('resub', event.tags)
+              }
+              if(event.tags['msg-id'] === 'sub') {
+                this.emit('sub', event.tags)
+              }
+              break
 
-          case 'JOIN':
-            break
+            case 'USERSTATE':
+              break
 
-          case 'MODE':
-            break
+            case 'JOIN':
+              this.emit('join', { joined: true, ts: new Date() })
+              break
 
-          case 'PING':
-            this.raw('PONG :tmi.twitch.tv')
-            this.emit('ping', 'Ping recieved, pong sent back')
-            break
-          default:
-            console.log('something else')
+            case 'MODE':
+              break
+
+            case 'PING':
+              this.raw('PONG :tmi.twitch.tv')
+              this.emit('ping', 'Ping recieved, pong sent back')
+              break
+
+            case '421':
+              this.emit('error', event.params[2] + ' ' + event.params[1])
+              break
+
+            default:
+              console.log('cmd -> ', event.command)
+          }
         }
       }
     })
@@ -100,18 +123,19 @@ const Bot = class Bot {
 
   write(text, callback) {
     this.messageRateLimiter.removeTokens(1, (err, requests) => {
-      if(err) callback(err)
+      if(err) callback(false, err)
       if(requests < 1) {
-        callback(new Error('Twitch IRC rate limit reached'))
+        callback(false, new Error('Twitch IRC rate limit reached'))
       } else {
         this.irc.write(text + "\r\n")
+        if(callback) callback(true, null)
       }
     })
   }
 
   raw(callback) {
     this.irc.pipe(ircMsg.createStream()).on('data', data => {
-      callback(data, null)
+      if(callback) callback(data, null)
     })
     this.irc.on('error', err => callback(null, err))
   }
@@ -120,6 +144,9 @@ const Bot = class Bot {
     if(!this.silence) {
       this.write("PRIVMSG " + this.channel + " :" + text, err => {
         if(err) callback(err)
+        else {
+          if(callback) callback(null)
+        }
       })
     } else {
       console.log('SILENCED MSG: ' + text)
@@ -131,6 +158,10 @@ const Bot = class Bot {
       if(err) callback(err)
     })
 	}
+
+  close() {
+    this.irc.destroy()
+  }
 
 }
 

@@ -4,21 +4,29 @@ const expect = require('chai').expect
 const TwitchBot = require('../index')
 
 const conf = {
-  username: process.env.BOT_USERNAME || 'bot_kappa_123',
-  oauth: process.env.BOT_OAUTH || 1,
-  channel: process.env.BOT_CHANNEL || 'kritzware'
+  username: process.env.BOT_USERNAME,
+  oauth: process.env.BOT_OAUTH,
+  channel: process.env.BOT_CHANNEL
+}
+
+function createBotInstance() {
+  return new TwitchBot({
+    username: conf.username,
+    oauth: conf.oauth,
+    channel: conf.channel
+  })
 }
 
 describe('bot', () => {
 
   describe('constructor', () => {
+    let Bot = null
+    
+    before(() => {
+      Bot = createBotInstance()
+    })
 
     it('should create a new bot instance with default arguments', () => {
-      const Bot = new TwitchBot({
-        username: conf.username,
-        oauth: conf.oauth,
-        channel: conf.channel
-      })
       expect(Bot.username).to.equal(conf.username)
       expect(Bot.oauth).to.equal(conf.oauth)
       expect(Bot.channel).to.equal('#' + conf.channel.toLowerCase())
@@ -30,22 +38,56 @@ describe('bot', () => {
   })
 
   describe('connect', () => {
-    
-    it('should connect to twitch irc server', async done => {
+    let Bot = null
+
+    before(done => {
+      Bot = createBotInstance()
+      Bot.connect().then(() => done())
+    })
+
+    it('should connect to twitch irc server', done => {
       const Bot = new TwitchBot({
         username: conf.username,
         oauth: conf.oauth,
         channel: conf.channel
       })
-      try {
-        await Bot.connect()
-        done()
-      } catch(err) {
-        done(err)
-      }
+      Bot.connect()
+      .then(() => {
+        Bot.on('join', connected => {
+          if(connected.joined) {
+            done()
+          }
+        })
+      })
     })
 
+    after(done => {
+      Bot.close()
+      done()
+    })
   })
 
+  describe('write', () => {
+    let Bot = null
+
+    beforeEach(done => {
+      Bot = createBotInstance()
+      Bot.connect().then(() => done())
+    })
+
+    it('should send raw commands to irc', done => {
+      Bot.write('PRIVMSG #kritzware : test', (sent, err) => {
+        if(sent) done()
+        else {
+          console.log(err)
+        }
+      })
+    })
+
+    afterEach(done => {
+      Bot.close()
+      done()
+    })
+  })
 
 })
