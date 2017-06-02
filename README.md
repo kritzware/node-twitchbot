@@ -37,13 +37,61 @@ Bot.connect()
 ## `TwitchBot()` options
 | parameter | type | description | required |
 | - | - | - | - |
-| `username` | `String` | Bot username | YES |
-| `oauth` | `String` | Twitch chat oauth token | YES |
-| `channel` | `String` | Channel, `#` can be included e.g. `#channel` or `channel` | YES |
-| `port` | `int` | Twitch IRC port, usually `443` or `6777`. Defaults to `443`| NO |
-| `silence` | `boolean` | Prevent bot from sending messages in chat. Outbound messages logged in console - useful for development. Defaults to `false` | NO |
-| `limit` | `int` | Limit number of raw messages sent to IRC. Defaults to `19`. Use `30` for moderators. | NO |
-| `period` | `int` | Message rate limit period (milliseconds). Defaults to `30000` | NO |
+| `username` | `String` | Bot username | ✔️ |
+| `oauth` | `String` | Twitch chat oauth token | ✔️ |
+| `channel` | `String` | Channel, `#` can be included e.g. `#channel` or `channel` | ✔️ |
+| `port` | `int` | Twitch IRC port, usually `443` or `6777`. Defaults to `443`| ❌ |
+| `silence` | `boolean` | Prevent bot from sending messages in chat. Outbound messages logged in console - useful for development. Defaults to `false` | ❌ |
+| `limit` | `int` | Limit number of raw messages sent to IRC. Defaults to `19`. Use `30` for moderators. | ❌ |
+| `period` | `int` | Message rate limit period (milliseconds). Defaults to `30000` | ❌ |
+
+## Events
+This package makes use of an `EventEmitter` to emit messages on certain Twitch IRC events. Events can be listened by using the `on` method, for example:
+```javascript
+Bot.on('event', message => {
+  // ...
+})
+```
+
+The available events are listed below:
+
+### `join` - `(connected)`
+Example
+```javascript
+Bot.on('join', connected => {
+  // ...
+})
+```
+Response
+```javascript
+connected { joined: true, ts: timestamp }
+```
+
+### `message` - `(chatter)`
+Example
+```javascript
+Bot.on('message', chatter => {
+  // ...
+})
+```
+Response
+```javascript
+chatter {
+  badges: 'subscriber/6,premium/1',
+  color: '#00FF6A',
+  'display-name': 'AceSlash',
+  emotes: true,
+  id: '73358dc0-e898-4cd2-b5ae-f647893b64b3',
+  mod: '0',
+  'room-id': '23161357',
+  'sent-ts': '1496436125243',
+  subscriber: '1',
+  'tmi-sent-ts': '1496436125849',
+  turbo: '0',
+  'user-id': '40705354',
+  'user-type': true
+}
+```
 
 ## Methods
 
