@@ -12,17 +12,23 @@ const Bot = class Bot {
     username,
     oauth,
     channel,
+    port=443,
     silence = false,
-    limit = 19
+    limit = 19,
+    period = 30000
   }) {
     this.username = username
     this.oauth = oauth
     this.channel = channel.toLowerCase()
+    this.port = port
     this.silence = silence
+    this.message_rate_limit = limit
+    this.message_rate_period = period
+
     if(!this.channel.includes('#')) this.channel = '#' + this.channel
     
     this.irc = new tls.TLSSocket()
-    this.messageRateLimiter = new RateLimiter(limit, 30000)
+    this.messageRateLimiter = new RateLimiter(this.message_rate_limit, this.message_rate_period)
     events.EventEmitter.call(this)
   }
 
@@ -30,7 +36,7 @@ const Bot = class Bot {
     return new Promise((resolve, reject) => {
       this.irc.connect({
         host: "irc.chat.twitch.tv",
-        port: 443
+        port: this.port
       })
       this.irc.setEncoding("utf8")
       this.irc.once("connect", () => {
@@ -45,6 +51,9 @@ const Bot = class Bot {
 
         this.listen()
         resolve()
+      })
+      this.irc.on("error", err => {
+        reject(err)  
       })
     })
   }
@@ -64,10 +73,24 @@ const Bot = class Bot {
             }
             break
 
-          case 'USERNOTICE':
+          case 'ROOMSTATE':
+            console.log(event.params)
+            break
+
+          case 'USERNOTICE': // resubs
             console.log(event)
             break
 
+          case 'JOIN':
+            break
+
+          case 'MODE':
+            break
+
+          case 'PING':
+            this.raw('PONG :tmi.twitch.tv')
+            this.emit('ping', 'Ping recieved, pong sent back')
+            break
           default:
             console.log('something else')
         }
