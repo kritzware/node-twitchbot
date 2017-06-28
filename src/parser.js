@@ -1,78 +1,96 @@
-"use strict";
-
 const _ = require('lodash')
 
 module.exports = {
 
-	createChatter : function(msg) {
-		return new Promise(resolve => {
-			resolve({
-				user: this.getElement(msg, 'display-name'),
-				msg: this.getMessage(msg),
-				channel: this.getChannel(msg),
-				twitch_id: this.getElement(msg, 'user-id'),
-				level: this.getElement(msg, 'user-type'),
-				sub: +this.getElement(msg, 'subscriber'),
-				turbo: +this.getElement(msg, 'turbo'),
-			})
-		})
-	},
+	getChatter(event, { command_prefix }) {
 
-	getElement : function(msg, el) {
-		let temp;
-		const s = msg.rawCommand.split(';')
+		const chatter = event.tags
 
-		s.some((m) => {
-			if(_.includes(m, el)) {
-				temp = m.split('=')[1]
-			}
-		})
-		return temp;
-	},
+		chatter.mod 				   = !!+chatter.mod
+		chatter['room-id'] 		 = +chatter['room-id']
+		chatter.subscriber 		 = !!+chatter.subscriber
+		chatter['tmi-sent-ts'] = +chatter['tmi-sent-ts']
+		chatter['sent-ts'] 		 = +chatter['sent-ts']
+		chatter.turbo 				 = !!+chatter.turbo
+		chatter['user-id'] 		 = +chatter['user-id']
 
-	getMessage : function(msg) {
-		return msg.args[0].split(':')[1]
-	},
-
-	getChannel : function(msg) {
-		if(_.includes(msg.args[0], '#')) {
-			return msg.args[0].split('#')[1].split(' ')[0]
+		/* ircMsg parser module returns empty vals as bools */
+		if(typeof chatter.emotes === 'boolean') {
+			chatter.emotes = false
 		}
-		return 'IRC'
+		
+		chatter.msg = event.params[1]
+		if(chatter.msg.includes('\u0001ACTION')) {
+			chatter.msg = chatter.msg.split('\u0001')[1].replace('ACTION ', '')
+			chatter.color_message = true
+		}
+
+		if(command_prefix) {
+			chatter.is_command = chatter.msg.split(' ')[0][0] === command_prefix ? true : false
+		}
+
+		if(chatter.is_command) {
+			const split_msg = chatter.msg.split(' ')
+			chatter.args = split_msg.splice(1, split_msg.length - 1)
+			chatter.msg_without_command = chatter.args.join(' ')
+			chatter.command = split_msg[0].replace('!', '')
+		}
+		
+		if(typeof chatter['display-name'] === 'boolean') {
+			chatter.username = event.prefix.split('!')[0]
+		} else {
+			chatter.username = chatter['display-name'].toLowerCase()
+		}
+
+		if(chatter.bits) {
+
+		}
+
+		return chatter
 	},
 
-	exactMatch : function(msg, word) {
-		return new Promise(resolve => {
-			if(word === '*') {
-				resolve(this.createChatter(msg))
-			} else {
-				if(msg.args[0].split(':')[1] === word) {
-					resolve(this.createChatter(msg))
-				}
+	getHost(event) {
+		const host = event.params[1]
+		const is_hosting = host.split(' ')
+
+		if(is_hosting[0] === '-') {
+			return {
+				hosting: false,
+				ts: new Date()
 			}
-		})
+		}
+		return {
+			hosting: true,
+			channel: is_hosting[0],
+			viewers: is_hosting[1],
+			ts: new Date()
+		}
 	},
 
-	includesMatch : function(msg, word) {
-		return new Promise(resolve => {
-			if(_.includes(msg.args[0].split(':')[1], word)) {
-				resolve(this.createChatter(msg))
-			}
-		})
-	},
+	getRoomstate(event) {
+		const state = event.tags
 
-	resub : function(msg) {
-		const _this = this;
-		return new Promise(resolve => {
-			if(_.includes(msg.command, 'msg-id=resub')) {
-				var split_raw = _.split(msg.command, ';')
-				split_raw.forEach(function(msg) {
-					if(_.includes(msg, 'msg-param-months')) {
-						resolve(_this.createChatter(msg), _.split(msg, '=')[1])
-					}
-				})
-			}
-		})
+		state['room-id'] = +state['room-id']
+
+		if(state['subs-only']) {
+			state['subs-only'] = !!+state['subs-only']
+		}
+		if(state['r9k']) {
+			// console.log(event.tags)
+			// delete state['r9k']
+			// state['rk9'] = !!+state['r9k']
+		}
+		if(state.slow) {
+			state.slow = +state.slow
+		}
+		if(state['emote-only']) {
+			state['emote-only'] = !!+state['emote-only']
+		}
+		if(state['followers-only']) {
+			state['followers-only'] = +state['followers-only']
+		}
+
+		return state
 	}
 
 }

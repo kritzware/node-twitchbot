@@ -6,16 +6,19 @@ const events = require('events')
 const ircMsg = require('irc-message')
 const RateLimiter = require('limiter').RateLimiter
 
+const parser = require('./parser')
+
 const Bot = class Bot {
 
   constructor({ 
     username,
     oauth,
     channel,
-    port=443,
+    port = 443,
     silence = false,
     limit = 19,
-    period = 30000
+    period = 30000,
+    command_prefix = '!'
   }) {
     this.username = username
     this.oauth = oauth
@@ -24,6 +27,7 @@ const Bot = class Bot {
     this.silence = silence
     this.message_rate_limit = limit
     this.message_rate_period = period
+    this.command_prefix = command_prefix
 
     if(!this.channel.includes('#')) this.channel = '#' + this.channel
     
@@ -67,12 +71,19 @@ const Bot = class Bot {
       '353', '366' // NAMES LIST
     ]
     this.raw((event, err) => {
-      if(err) callback(null, err)
+      if(err) this.emit('error', err)
       else {
+
+        console.log(event)
+
         if(!events_to_ignore.includes(event.command)) {
           switch(event.command) {
+
             case 'PRIVMSG':
-              this.emit('message', event.tags)
+              const chatter = parser.getChatter(event, {
+                command_prefix: this.command_prefix
+              })
+              this.emit('message', chatter)
               break
 
             case 'NOTICE':
@@ -82,7 +93,10 @@ const Bot = class Bot {
               break
 
             case 'ROOMSTATE':
-              console.log(event.params)
+              if(!event.tags['broadcaster-lang']) {
+                const roomstate_event = parser.getRoomstate(event)
+                this.emit('roomstate', roomstate_event)
+              }
               break
 
             case 'USERNOTICE': // resubs
@@ -94,19 +108,36 @@ const Bot = class Bot {
               }
               break
 
+            case 'NOTICE':
+              console.log(event)
+              break
+
             case 'USERSTATE':
               break
 
             case 'JOIN':
-              this.emit('join', { joined: true, ts: new Date() })
+              console.log(event)
+              // this.emit('join', { joined: true, ts: new Date() })
               break
 
             case 'MODE':
               break
 
+            case 'CLEARCHAT':
+              console.log(event.tags) // /ban, /clear
+              break
+
+            case 'HOSTTARGET':
+              const host = parser.getHost(event)
+              this.emit('host', host)
+              break
+
             case 'PING':
               this.raw('PONG :tmi.twitch.tv')
-              this.emit('ping', 'Ping recieved, pong sent back')
+              this.emit('ping', {
+                sent: true,
+                ts: new Date()
+              })
               break
 
             case '421':
@@ -114,7 +145,8 @@ const Bot = class Bot {
               break
 
             default:
-              console.log('cmd -> ', event.command)
+              console.log('something new!')
+              console.log(event)
           }
         }
       }
@@ -123,12 +155,12 @@ const Bot = class Bot {
 
   write(text, callback) {
     this.messageRateLimiter.removeTokens(1, (err, requests) => {
-      if(err) callback(false, err)
+      if(err) callback(err, false)
       if(requests < 1) {
-        callback(false, new Error('Twitch IRC rate limit reached'))
+        callback(new Error('Twitch IRC rate limit reached'), false)
       } else {
         this.irc.write(text + "\r\n")
-        if(callback) callback(true, null)
+        if(callback) callback(null, true)
       }
     })
   }
@@ -140,22 +172,26 @@ const Bot = class Bot {
     this.irc.on('error', err => callback(null, err))
   }
 
-  msg(text, callback) {
+  say(text, callback) {
     if(!this.silence) {
-      this.write("PRIVMSG " + this.channel + " :" + text, err => {
-        if(err) callback(err)
-        else {
-          if(callback) callback(null)
-        }
+      this.write("PRIVMSG " + this.channel + " :" + text, (err, sent) => {
+        if(callback) callback(err, {
+          sent: true,
+          ts: new Date()
+        })
       })
     } else {
       console.log('SILENCED MSG: ' + text)
+      if(callback) callback(null, 'silenced message')
     }
   }
 
-	whisper(user, text) {
-		this.write("PRIVMSG #jtv : /w " + user + " " + text, err => {
-      if(err) callback(err)
+	whisper(user, text, callback) {
+		this.write("PRIVMSG #jtv : /w " + user + " " + text, (err, sent) => {
+      if(callback) callback(err, {
+        sent: true,
+        ts: new Date()
+      })
     })
 	}
 

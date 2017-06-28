@@ -54,6 +54,21 @@ module.exports = {
         turbo: '0',
         'user-id': '78917118',
         'user-type': 'mod'
+    },
+
+    'host': {
+        tags: {},
+        prefix: 'tmi.twitch.tv',
+        command: 'HOSTTARGET',
+        params: [ '#kritzware', 'blarev 0'] 
+    },
+
+    'unhost': {
+        raw: ':tmi.twitch.tv HOSTTARGET #kritzware :- 0',
+		tags: {},
+		prefix: 'tmi.twitch.tv',
+		command: 'HOSTTARGET',
+		params: [ '#kritzware', '- 0']
     }
 
 }

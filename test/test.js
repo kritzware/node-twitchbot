@@ -69,23 +69,37 @@ describe('bot', () => {
 
   describe('write', () => {
     let Bot = null
+    let Listener = null
 
     beforeEach(done => {
       Bot = createBotInstance()
-      Bot.connect().then(() => done())
+      Listener = createBotInstance()
+      Promise.all([
+        Bot.connect(),
+        Listener.connect()
+      ])
+      .then(() => done())
     })
 
     it('should send raw commands to irc', done => {
-      Bot.write('PRIVMSG #kritzware : test', (sent, err) => {
-        if(sent) done()
-        else {
-          console.log(err)
+      Listener.on('message', chatter => {
+        if(chatter['display-name'] === conf.username) {
+          done()
         }
+      })
+      Bot.write('PRIVMSG ' + Bot.channel + ' : raw message test KKona')
+    })
+
+    it('should send raw commands to irc (callback)', done => {
+      Bot.write('PRIVMSG ' + Bot.channel + ' : raw message test (cb) KKona', (sent, err) => {
+        expect(sent).to.equal(true)
+        done()
       })
     })
 
     afterEach(done => {
       Bot.close()
+      Listener.close()
       done()
     })
   })
