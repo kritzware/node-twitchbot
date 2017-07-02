@@ -22,7 +22,15 @@ const Bot = class Bot {
   }) {
     this.username = username
     this.oauth = oauth
-    this.channel = channel.toLowerCase()
+    this.channel = channel ? channel.toLowerCase() : channel
+
+    if(!username || !oauth || !channel) {
+      throw ({ 
+        name: 'missing required arguments', 
+        message: 'You must provide all the default arguments [username, oauth, channel]'
+      })
+    }
+
     this.port = port
     this.silence = silence
     this.message_rate_limit = limit
@@ -74,8 +82,6 @@ const Bot = class Bot {
       if(err) this.emit('error', err)
       else {
 
-        console.log(event)
-
         if(!events_to_ignore.includes(event.command)) {
           switch(event.command) {
 
@@ -116,8 +122,8 @@ const Bot = class Bot {
               break
 
             case 'JOIN':
-              console.log(event)
-              // this.emit('join', { joined: true, ts: new Date() })
+              // console.log(event)
+              this.emit('join', { joined: true, ts: new Date() })
               break
 
             case 'MODE':
