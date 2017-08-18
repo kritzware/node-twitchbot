@@ -43,6 +43,10 @@ concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/concat-map/-/concat-map-0.0.1.tgz#d8a96bd77fd68df7793a73036a3ba0d5405d477b"
 
+core-util-is@~1.0.0:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/core-util-is/-/core-util-is-1.0.2.tgz#b5fd54220aa2bc5ab57aab7140c940754503c1a7"
+
 debug@2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.2.0.tgz#f87057e995b1a1f6ae6a4960664137bc56f039da"
@@ -90,12 +94,6 @@ has-flag@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-1.0.0.tgz#9d9e793165ce017a00f00418c43f942a7b1d11fa"
 
-iconv@~2.2.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/iconv/-/iconv-2.2.1.tgz#39b13fdd98987d26aef26c0a2f2a900911fa4584"
-  dependencies:
-    nan "^2.3.5"
-
 inflight@^1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/inflight/-/inflight-1.0.6.tgz#49bd6331d7d02d0c09bc910a1075ba8165b56df9"
@@ -103,26 +101,37 @@ inflight@^1.0.4:
     once "^1.3.0"
     wrappy "1"
 
-inherits@2:
+inherits@2, inherits@~2.0.1:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/inherits/-/inherits-2.0.3.tgz#633c2c83e3da42a502f52466022480f4208261de"
 
-irc-colors@^1.1.0:
-  version "1.3.3"
-  resolved "https://registry.yarnpkg.com/irc-colors/-/irc-colors-1.3.3.tgz#16f8fa6130a3882fdf4fab801c5b4f58328a3391"
-
-irc@kritzware/node-irc:
-  version "0.5.2"
-  resolved "https://codeload.github.com/kritzware/node-irc/tar.gz/cab82a1a4d7fe16484ca8bddddefb89418d4c8b8"
+irc-message@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/irc-message/-/irc-message-3.0.2.tgz#5377b235c54c4e3ce56536c9d40c5291798df9df"
   dependencies:
-    irc-colors "^1.1.0"
-  optionalDependencies:
-    iconv "~2.2.1"
-    node-icu-charset-detector "~0.2.0"
+    irc-prefix-parser "^1.0.1"
+    iso8601-convert "^1.0.0"
+    through2 "^0.6.3"
+
+irc-prefix-parser@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/irc-prefix-parser/-/irc-prefix-parser-1.0.1.tgz#56ce60d78f30e9b80b0fcf123f4ef9f8f2e62e0b"
+
+isarray@0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/isarray/-/isarray-0.0.1.tgz#8a18acfca9a8f4177e09abfc6038939b05d1eedf"
+
+iso8601-convert@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/iso8601-convert/-/iso8601-convert-1.0.0.tgz#8a709807c98e60466d9e794d811265c90a415635"
 
 json3@3.3.2:
   version "3.3.2"
   resolved "https://registry.yarnpkg.com/json3/-/json3-3.3.2.tgz#3c0434743df93e2f5c42aee7b19bcb483575f4e1"
+
+limiter@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/limiter/-/limiter-1.1.0.tgz#6e2bd12ca3fcdaa11f224e2e53c896df3f08d913"
 
 lodash._baseassign@^3.0.0:
   version "3.2.0"
@@ -211,16 +220,6 @@ ms@0.7.1:
   version "0.7.1"
   resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
 
-nan@^2.3.3, nan@^2.3.5:
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/nan/-/nan-2.5.1.tgz#d5b01691253326a97a2bbee9e61c55d8d60351e2"
-
-node-icu-charset-detector@~0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/node-icu-charset-detector/-/node-icu-charset-detector-0.2.0.tgz#c2320da374ddcb671fc54cb4a0e041e156ffd639"
-  dependencies:
-    nan "^2.3.3"
-
 once@^1.3.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/once/-/once-1.4.0.tgz#583b1aa775961d4b113ac17d9c50baef9dd76bd1"
@@ -231,11 +230,31 @@ path-is-absolute@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/path-is-absolute/-/path-is-absolute-1.0.1.tgz#174b9268735534ffbc7ace6bf53a5a9e1b5c5f5f"
 
+"readable-stream@>=1.0.33-1 <1.1.0-0":
+  version "1.0.34"
+  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-1.0.34.tgz#125820e34bc842d2f2aaafafe4c2916ee32c157c"
+  dependencies:
+    core-util-is "~1.0.0"
+    inherits "~2.0.1"
+    isarray "0.0.1"
+    string_decoder "~0.10.x"
+
+string_decoder@~0.10.x:
+  version "0.10.31"
+  resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-0.10.31.tgz#62e203bc41766c6c28c9fc84301dab1c5310fa94"
+
 supports-color@3.1.2:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-3.1.2.tgz#72a262894d9d408b956ca05ff37b2ed8a6e2a2d5"
   dependencies:
     has-flag "^1.0.0"
+
+through2@^0.6.3:
+  version "0.6.5"
+  resolved "https://registry.yarnpkg.com/through2/-/through2-0.6.5.tgz#41ab9c67b29d57209071410e1d7a7a968cd3ad48"
+  dependencies:
+    readable-stream ">=1.0.33-1 <1.1.0-0"
+    xtend ">=4.0.0 <4.1.0-0"
 
 type-detect@0.1.1:
   version "0.1.1"
@@ -248,3 +267,7 @@ type-detect@^1.0.0:
 wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
+
+"xtend@>=4.0.0 <4.1.0-0":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.1.tgz#a5c6d532be656e23db820efb943a1f04998d63af"

@@ -39,4 +39,5 @@ jspm_packages
 config.js
 npm_test.js
 local_test.js
+expected.js
 .vscode/

@@ -4,114 +4,138 @@
 
 This package is not to be used for Twitch botting (inflating live viewer counts) and should only be used for chatbots. Attempting to 'bot' a Twitch channel can lead to your account being permanently banned. ![](https://static-cdn.jtvnw.net/emoticons/v1/91/1.0)
 
-### Installation
-Version 2.0.0^ (<b>Recommended</b>): 
+# Install
 ```bash
 $ npm install node-twitchbot
 ```
-Version 1 (Deprecated):
-```bash
-$ npm install node-twitchbot@1.2.2
-```
 
-## V2 DOCS
-### Example
+# Docs
+## Basic example
 ```javascript
 const TwitchBot = require('node-twitchbot')
 
 const Bot = new TwitchBot({
-  username : 'GLADOS',
-  oauth    : 'oauth:secret-oauth-pass',
-  channel  : 'Aperture'
+  username: 'your_twitch_bot',
+  oauth: 'oauth:your-oauth-key',
+  channel: 'your_channel'
 })
 
-/* Connect bot to Twitch IRC */
 Bot.connect()
 .then(() => {
-
-  /* Listen for all messages in channel */
-  Bot.listen((err, chatter) => {
-    if(err) {
-      console.log(err)
-    } else {
-      console.log(chatter.msg) // 'Hello World!'
+  
+  Bot.on('message', chatter => {
+    if(chatter.msg === '!command') {
+      Bot.msg('Command executed PogChamp')
     }
   })
 
-  /* Listen for an exact messages match */
-  Bot.listenFor('KKona', (err, chatter) => {
-    console.log(chatter)
-  })
-
-  /* Send a message in the channel */
-  Bot.msg('this is the message text PogChamp')
-
-  /* Listen for raw IRC events */
-  Bot.raw((err, event) => {
-    console.log(event)
+  Bot.on('error', err => {
+    console.log('twitch irc error', err)
   })
 })
-.catch(err => {
-  console.log('Connection error!')
-  console.log(err)
+.catch(err => console.log(err))
+```
+
+## `TwitchBot()` options
+| parameter | type | description | required |
+| - | - | - | - |
+| `username` | `String` | Bot username | ✔️ |
+| `oauth` | `String` | Twitch chat oauth token | ✔️ |
+| `channel` | `String` | Channel, `#` can be included e.g. `#channel` or `channel` | ✔️ |
+| `port` | `int` | Twitch IRC port, usually `443` or `6777`. Defaults to `443`| ❌ |
+| `silence` | `boolean` | Prevent bot from sending messages in chat. Outbound messages logged in console - useful for development. Defaults to `false` | ❌ |
+| `limit` | `int` | Limit number of raw messages sent to IRC. Defaults to `19`. Use `30` for moderators. | ❌ |
+| `period` | `int` | Message rate limit period (milliseconds). Defaults to `30000` | ❌ |
+
+## Events
+This package makes use of an `EventEmitter` to emit messages on certain Twitch IRC events. Events can be listened by using the `on` method, for example:
+```javascript
+Bot.on('event', message => {
+  // ...
 })
 ```
 
-### Chatter Object
-Most callbacks return a `chatter` object which contains the following attributes:
+The available events are listed below:
+
+### `join` - `(connected)`
+Example
 ```javascript
-{
-  user: 'kritzware',
-  msg: 'Hello world! Kappa',
-  channel: 'kritzware',
-  twitch_id: '44667418',
-  level: 'mod',
-  sub: 0,
-  turbo: 0
+Bot.on('join', connected => {
+  // ...
+})
+```
+Response
+```javascript
+connected { joined: true, ts: timestamp }
+```
+
+### `message` - `(chatter)`
+Example
+```javascript
+Bot.on('message', chatter => {
+  // ...
+})
+```
+Response
+```javascript
+chatter {
+  badges: 'subscriber/6,premium/1',
+  color: '#00FF6A',
+  'display-name': 'AceSlash',
+  emotes: true,
+  id: '73358dc0-e898-4cd2-b5ae-f647893b64b3',
+  mod: '0',
+  'room-id': '23161357',
+  'sent-ts': '1496436125243',
+  subscriber: '1',
+  'tmi-sent-ts': '1496436125849',
+  turbo: '0',
+  'user-id': '40705354',
+  'user-type': true
 }
 ```
 
-## V1 DOCS
-### Example
+## Methods
+
+### `connect()`
+The `connect` method creates a connection to `"irc.chat.twitch.tv"` and resolves once the connection is established.
+#### Usage
 ```javascript
-const Bot = require('node-twitchbot')
-
-Bot.run({
-username: 'bot_username',
-  oauth: 'oauth:twitch_oauth_key',
-  channel: 'channel'
+Bot.connect()
+.then(() => {
+  // ...
 })
+.catch(err => console.log(err))
+```
 
-/* Exact message match */
-Bot.listenFor('Kappa', (err, chatter) => {
-  if(err) {
-    console.log(err)
-  } else {
-    console.log(chatter)
-  }
+#### Usage with async/await
+```javascript
+async function start() {
+  await Bot.connect()
+  // ...
+}
+
+try {
+  start()
+} catch(err) {
+  console.log(err)
+}
+```
+
+### `msg(text, callback)`
+Sends a chat message to the connected Twitch channel. If `silence` was set to `true` the message will be printed in the console and not sent to IRC. A callback is provided if you wish to validate if the message was correctly sent.
+#### Usage
+```javascript
+Bot.msg('This is a message from the bot! PogChamp')
+Bot.msg('Kappa 123')
+
+Bot.msg('Did this message send? :thinking:', err => {
+  if(err) console.log(err)
 })
+```
 
-/* Return all user message in channel */
-Bot.listenFor('*', (err, chatter) {
-  // Returns all viewer messages in channel
-})
-
-/* String is included in message */
-Bot.listen('PogChamp', (err, chatter) => {
-  console.log(chatter)
-})
-
-/* Sub/resub event in chat */
-Bot.resub((err, chatter, sub) => {
-  console.log(sub)
-})
-
-/* Say messages in chat */
-Bot.msg('Hello chat!')
-
-/* Private message user */
-Bot.whisper('kritzware', 'This is a private message Kappa')
-
+OLD DOCS (REMOVED BEFORE PUBLISHING)
+```javascript
 /* Setting commands instead of checking via string match */
 const commands = {
   help : 'For help using this bot, contact kritzware',
@@ -133,15 +157,5 @@ Bot.commands('!', commands, (err, chatter, command) => {
     console.log(command)
     console.log(chatter)
   }
-})
-```
-
-#### Output for example '!goodnight' command above
-![](http://i.imgur.com/buPqiaK.gif)
-
-#### Example of a command
-```javascript
-Bot.listenFor('!command', (err, chatter) => {
-  Bot.msg('This is the command response')
 })
 ```

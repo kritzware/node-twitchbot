@@ -1,169 +1,157 @@
 const assert = require('assert')
 const expect = require('chai').expect
 
-const Bot = require('../index')
-const test_options = {
-  username : process.env.username,
-  oauth    : process.env.oauth,
-  channel  : process.env.channel
+const TwitchBot = require('../index')
+const parser = require('../src/parser')
+
+const conf = {
+  username: process.env.BOT_USERNAME,
+  oauth: process.env.BOT_OAUTH,
+  channel: !process.env.BOT_CHANNEL.includes('#') ? '#' + process.env.BOT_CHANNEL : process.env.BOT_CHANNEL
+}
+const sender_conf = {
+  username: process.env.USERNAME,
+  oauth: process.env.OAUTH,
+  channel: !process.env.CHANNEL.includes('#') ? '#' + process.env.CHANNEL : process.env.CHANNEL
 }
 
-/* TODO: Make all tests better */
+async function newBot(options) {
+  const bot = new TwitchBot(options)
+  await bot.connect()
+  return bot
+}
+function destroy(reciever, sender) {
+  reciever.close()
+  sender.close()
+}
 
 describe('Bot', () => {
 
-  describe('init', () => {
-    it('should create a new bot instance when given valid arguments', () => {
-      const TwitchBot = new Bot(test_options)
+  describe('constructor', () => {
+
+    it('should create a bot with default settings', () => {
+      const bot = new TwitchBot({
+        username: conf.username,
+        oauth: conf.oauth,
+        channel: conf.channel
+      })
+      expect(bot).to.include({ username: conf.username })
+      expect(bot).to.include({ oauth: conf.oauth })
+      expect(bot).to.include({ channel: conf.channel })
+      expect(bot).to.include({ port: 443 })
+      expect(bot).to.include({ silence: false })
+      expect(bot).to.include({ message_rate_limit: 19 })
+      expect(bot).to.include({ message_rate_period: 30000 })
+      expect(bot).to.include({ command_prefix: '!' })
     })
-    it('should fail when no options given', () => {
-      expect(() => new Bot()).to.throw(Error)
+
+    it('should create a bot with optional settings', () => {
+      const bot = new TwitchBot({
+        username: conf.username,
+        oauth: conf.oauth,
+        channel: conf.channel,
+        port: 6667,
+        silence: true,
+        limit: 10,
+        period: 25000,
+        command_prefix: '#'
+      })
+      expect(bot).to.include({ username: conf.username })
+      expect(bot).to.include({ oauth: conf.oauth })
+      expect(bot).to.include({ channel: conf.channel })
+      expect(bot).to.include({ port: 6667 })
+      expect(bot).to.include({ silence: true })
+      expect(bot).to.include({ message_rate_limit: 10 })
+      expect(bot).to.include({ message_rate_period: 25000 })
+      expect(bot).to.include({ command_prefix: '#' })
     })
-    it('should fail when given no username, oauth or channel arguments', () => {
-      expect(() => new Bot({}).to.throw(Error))
-      expect(() => new Bot({username: 'hal',}).to.throw(Error))
+
+    it('should fail when default arguments not provided', () => {
+      try {
+        const bot = new TwitchBot({
+        username: '',
+        oauth: ''
+      })
+      } catch(err) {
+        expect(err.name).to.equal('missing required arguments')
+      }
     })
+
+    it('should create a new socket', () => {
+      const bot = new TwitchBot({
+        username: conf.username,
+        oauth: conf.oauth,
+        channel: conf.channel
+      })
+      expect(bot.irc).to.include({ domain: null })
+      expect(bot.irc).to.include({ connecting: true })
+    })
+
   })
 
   describe('connect', () => {
-    let TwitchBot
     
-    afterEach(done => {
-      TwitchBot.client.disconnect()
-      done()
+    it('should connect to Twitch IRC', async () => {
+      const bot = await newBot(conf)
+      expect(bot.irc).to.include({ connecting: false })
+      expect(bot.irc).to.include({ _host: 'irc.chat.twitch.tv' })  
     })
 
-    it('should connect to twitch irc', done => {
-      TwitchBot = new Bot(test_options)
-      TwitchBot.connect()
-      .then(() => {
-        assert.equal(true, TwitchBot.client.conn.connected)
-        done()
-      })
-    })
-    it('should connect to the correct twitch channel', done => {
-      TwitchBot = new Bot(test_options)
-      TwitchBot.connect()
-      .then(() => {
-        assert.equal('#'+test_options.channel, TwitchBot.client.opt.channels[0])
-        done()
-      })
-    })
   })
 
-  /* TODO: Make this test better */
-  describe('raw', () => {
-    let TwitchBot
-
-    before(done => {
-      TwitchBot = new Bot(test_options)
-      TwitchBot.connect().then(() => done())
-    })
-
-    it('should return all irc events', (done) => {
-      TwitchBot.raw((err, event) => {
-        if(!err && event.rawCommand === 'JOIN') {
-          expect(event).to.have.any.keys('prefix', 'nick', 'user', 'host', 'args')
-          expect(event.args[0]).to.equal('#'+test_options.channel)
-          done()
-        }
+  describe('events', () => {
+    
+    describe('join', () => {
+      it('should emit a join message when connecting to the channel room', async () => {
+        const bot = await newBot(conf)
+        return new Promise(resolve => {
+          bot.on('join', event => {
+            expect(event.joined).to.equal(true)
+            resolve()
+          })
+        })
       })
     })
-  })
 
-  describe('msg', () => {
-    let TwitchBotSender, TwitchBotListener
-
-    before(done => {
-      TwitchBotSender = new Bot(test_options)
-      TwitchBotListener = new Bot(test_options)
-      Promise.all([
-        TwitchBotSender.connect(),
-        TwitchBotListener.connect()
-      ])
-      .then(() => done())
-    })
-
-    after(() => {
-      TwitchBotSender.client.disconnect()
-      TwitchBotListener.client.disconnect()
-    })
-
-    it('should send a message to the correct twitch irc channel', done => {
-      TwitchBotListener.listen((err, chatter) => {
-        if(!err) {
-          expect(chatter.msg).to.equal('message test FeelsGoodMan')
-          expect(chatter.user).to.equal(test_options.username)
-          expect(chatter.channel).to.equal(test_options.channel)
-          done()
-        }
-      })
-      TwitchBotSender.msg('message test FeelsGoodMan')
-    })
-  })
-
-  describe('listen', () => {
-    let TwitchBotSender, TwitchBotListener
-
-    before(done => {
-      TwitchBotSender = new Bot(test_options)
-      TwitchBotListener = new Bot(test_options)
-      Promise.all([
-        TwitchBotSender.connect(),
-        TwitchBotListener.connect()
-      ])
-      .then(() => done())
-    })
-
-    after(() => {
-      TwitchBotSender.client.disconnect()
-      TwitchBotListener.client.disconnect()
-    })
-
-    it('should listen for all messages and return chatter objects', (done) => {
-      const messages = []
-      TwitchBotSender.msg('chatter test 1')
-      TwitchBotSender.msg('chatter test 2')
-      TwitchBotListener.listen((err, chatter) => {
-        if(!err) {
-          messages.push(chatter)
-          if(messages.length > 1) {
-            expect(messages[0]).to.have.keys('user', 'msg', 'channel', 'twitch_id', 'level', 'sub', 'turbo')
-            expect(messages[0].msg).to.equal('chatter test 1')
-            expect(messages[1]).to.have.keys('user', 'msg', 'channel', 'twitch_id', 'level', 'sub', 'turbo')
-            expect(messages[1].msg).to.equal('chatter test 2')
-            done()
-          }
-        }
+    describe('roomstate', () => {
+      it('should emit roomstate event when a room mode is toggled', async () => {
+        const bot = await newBot(conf)
+        return new Promise(resolve => {
+          bot.on('roomstate', state => {
+            if(state['subs-only']) {
+              expect(state['subs-only']).to.equal(true)
+              resolve()
+            }
+          })
+          bot.say('/subscribersoff')
+          bot.say('/subscribers')
+          bot.say('/subscribersoff')
+        })
       })
     })
-  })
 
-  describe('listenFor', () => {
-    let TwitchBotSender, TwitchBotListener
-
-    before(done => {
-      TwitchBotSender = new Bot(test_options)
-      TwitchBotListener = new Bot(test_options)
-      Promise.all([
-        TwitchBotSender.connect(),
-        TwitchBotListener.connect()
-      ])
-      .then(() => done())
-    })
-
-    it('should listen for an exact match and return a chatter object', (done) => {
-      TwitchBotSender.msg('exact match test NaM')
-      TwitchBotSender.msg('exact match test KKona')
-      TwitchBotListener.listenFor('exact match test KKona', (err, chatter) => {
-        if(!err) {
-          expect(chatter).to.not.be.null
-          expect(chatter.user).to.equal(test_options.username)
-          expect(chatter.msg).to.equal('exact match test KKona')
-          done()
-        }
+    describe('message', () => {
+      it('should emit a chatter when a message is sent in the channel room', async () => {
+        const msg = 'unit test message 1 KKona'
+        const [
+          bot,
+          sender
+        ] = await Promise.all([
+          newBot(conf),
+          newBot(sender_conf)
+        ])
+        return new Promise(resolve => {
+          bot.on('message', chatter => {
+            expect(chatter.msg).to.equal(msg)
+            expect(chatter.username).to.equal(sender_conf.username)
+            expect(chatter.emotes).to.equal(false)
+            resolve()
+          })
+          sender.say(msg)
+        })
       })
     })
-  })
 
+  })
+  
 })
