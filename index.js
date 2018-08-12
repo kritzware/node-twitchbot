@@ -98,6 +98,10 @@ Bot.prototype = {
 
 	msg(text) {
 		this.client.send('PRIVMSG #' + this.channel, text)
+	},
+  
+	disconnect() {
+		this.client.disconnect()
 	}
 
 }
